@@ -12,7 +12,7 @@ const API = {
       fields: [
         'Codigo', 'Categoria', 'Cidade', 'Bairro',
         'AreaTotal', 'ValorLocacao', 'ValorVenda',
-        'PeDireito', 'Docas', 'FotoDestaque'
+        'FotoDestaque'
       ],
       paginacao: { pagina: 1, quantidade: 9 }
     });
