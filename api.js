@@ -7,26 +7,43 @@ const API = {
     return url;
   },
 
-  async listarImoveis(filtros = {}) {
+  async listarImoveis() {
     const pesquisa = JSON.stringify({
       fields: [
         'Codigo', 'Categoria', 'Cidade', 'Bairro',
-        'AreaTotal', 'AreaPrivativa', 'ValorLocacao', 'ValorVenda',
-        'PeDireito', 'Docas', 'Situacao', 'FotoDestaque'
+        'AreaTotal', 'ValorLocacao', 'ValorVenda',
+        'PeDireito', 'Docas', 'FotoDestaque'
       ],
-      paginacao: { pagina: 1, quantidade: 9 },
-      Order: [{ Codigo: 'desc' }]
+      paginacao: { pagina: 1, quantidade: 9 }
     });
 
     try {
       const resp = await fetch(this.url('imoveis/listar', { pesquisa }));
       const text = await resp.text();
+      console.log('Raw response:', text.substring(0, 200));
       const data = JSON.parse(text);
+      console.log('Parsed data keys:', Object.keys(data));
+      console.log('First item:', JSON.stringify(Object.values(data)[0]));
       return data;
     } catch (err) {
       console.error('Erro:', err);
       return null;
     }
+  },
+
+  fixText(str) {
+    if (!str) return '';
+    return str
+      .replace(/\\u00e3o/g,'ão').replace(/\\u00e3/g,'ã')
+      .replace(/\\u00e9/g,'é').replace(/\\u00ea/g,'ê')
+      .replace(/\\u00e0/g,'à').replace(/\\u00e2/g,'â')
+      .replace(/\\u00f3/g,'ó').replace(/\\u00f4/g,'ô')
+      .replace(/\\u00fa/g,'ú').replace(/\\u00ed/g,'í')
+      .replace(/\u00e3o/g,'ão').replace(/\u00e3/g,'ã')
+      .replace(/\u00e9/g,'é').replace(/\u00ea/g,'ê')
+      .replace(/\u00e0/g,'à').replace(/\u00e2/g,'â')
+      .replace(/\u00f3/g,'ó').replace(/\u00f4/g,'ô')
+      .replace(/\u00fa/g,'ú').replace(/\u00ed/g,'í');
   },
 
   formatarValor(val) {
@@ -46,14 +63,13 @@ const API = {
   gerarCardImovel(imovel) {
     const foto = imovel.FotoDestaque || null;
     const preco = this.formatarValor(imovel.ValorLocacao) || this.formatarValor(imovel.ValorVenda) || 'Consultar';
-    const area = this.formatarArea(imovel.AreaTotal) || this.formatarArea(imovel.AreaPrivativa) || '—';
+    const area = this.formatarArea(imovel.AreaTotal) || '—';
     const pe = imovel.PeDireito ? `${imovel.PeDireito}m` : '—';
     const docas = imovel.Docas ? `${imovel.Docas} docas` : '—';
-    const categoria = (imovel.Categoria || 'Galpão').replace(/\u00e3/g,'ã').replace(/\u00e3o/g,'ão').replace(/\u00e9/g,'é');
-    const cidade = (imovel.Cidade || '').replace(/\u00e3/g,'ã').replace(/\u00e9/g,'é').replace(/\u00e3o/g,'ão');
-    const bairro = (imovel.Bairro || '').replace(/\u00e3/g,'ã').replace(/\u00e9/g,'é').replace(/\u00e3o/g,'ão');
+    const categoria = this.fixText(imovel.Categoria || 'Galpão');
+    const cidade = this.fixText(imovel.Cidade || '');
+    const bairro = this.fixText(imovel.Bairro || '');
     const titulo = `${categoria} — ${bairro || cidade}`;
-    const situacao = imovel.Situacao || 'Disponível';
 
     return `
       <a href="imovel.html?codigo=${imovel.Codigo}" class="imovel-card">
@@ -63,7 +79,7 @@ const API = {
             <rect x="12" y="18" width="36" height="14" rx="1" fill="#2A5A8C"/>
             <rect x="20" y="32" width="6" height="20" fill="#D4820A"/>
           </svg>` : ''}
-          <div class="imovel-badge">${situacao}</div>
+          <div class="imovel-badge">Disponível</div>
         </div>
         <div class="imovel-info">
           <div class="imovel-titulo">${titulo}</div>
@@ -97,18 +113,19 @@ const API = {
 
     const data = await this.listarImoveis();
 
-    if (!data) {
+    if (!data || typeof data !== 'object') {
       container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#888;">Erro ao carregar imóveis.</div>`;
       return;
     }
 
-    // Dados chegam como {"1":{...},"2":{...},...}
-    const imoveis = Object.values(data).filter(i => i && i.Codigo);
+    // Filtra apenas objetos com Codigo válido
+    const imoveis = Object.values(data).filter(i => i && typeof i === 'object' && i.Codigo);
+    console.log('Imóveis encontrados:', imoveis.length);
 
     if (imoveis.length === 0) {
       container.innerHTML = `
         <div style="grid-column:1/-1;text-align:center;padding:40px;color:#888;">
-          Nenhum imóvel disponível no momento.<br>
+          Nenhum imóvel disponível.<br>
           <a href="https://wa.me/${CONFIG.whatsapp}" target="_blank" style="color:#1A3A5C;font-weight:600;">
             Fale com Denis pelo WhatsApp →
           </a>
@@ -139,7 +156,6 @@ const API = {
       });
       return await resp.json();
     } catch (err) {
-      console.error('Erro lead:', err);
       return null;
     }
   }
