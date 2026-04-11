@@ -4,6 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Galpões SP | Detalhes do Imóvel</title>
+<meta name="description" content="Consulte detalhes, fotos, área e valores deste imóvel industrial disponível na Grande São Paulo. Galpões SP Consultoria.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://galpoesp.com.br/imovel/" id="canonical-tag">
+
+<!-- Open Graph (atualizado via JS após carregar o imóvel) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Galpões SP Consultoria">
+<meta property="og:url" content="https://galpoesp.com.br/imovel/" id="og-url">
+<meta property="og:title" content="Imóvel Industrial | Galpões SP Consultoria" id="og-title">
+<meta property="og:description" content="Consulte detalhes, fotos e valores deste imóvel industrial na Grande São Paulo." id="og-description">
+<meta property="og:image" content="" id="og-image">
+<meta property="og:locale" content="pt_BR">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Imóvel Industrial | Galpões SP Consultoria" id="twitter-title">
+<meta name="twitter:description" content="Consulte detalhes, fotos e valores deste imóvel industrial na Grande São Paulo." id="twitter-description">
+<meta name="twitter:image" content="" id="twitter-image">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <style>
 :root { --azul:#1A3A5C; --ambar:#D4820A; --cinza:#F5F3EE; --texto:#2C2C2A; --suave:#5F5E5A; --branco:#fff; }
@@ -108,8 +126,23 @@ async function carregarImovel() {
 
   // Atualiza title e breadcrumb
   const titulo = im.Titulo || `${im.Categoria} em ${im.Cidade}`;
-  document.title = `${titulo} | Galpões SP`;
+  document.title = `${titulo} | Galpões SP Consultoria`;
   document.getElementById('bread-titulo').textContent = titulo;
+
+  // Atualiza meta tags dinamicamente para SEO
+  const descricaoMeta = `${im.Categoria || 'Galpão'} disponível em ${im.Cidade || 'São Paulo'}${im.Bairro ? ', ' + im.Bairro : ''}. ${im.AreaTotal ? 'Área: ' + parseFloat(im.AreaTotal).toLocaleString('pt-BR') + ' m².' : ''} Galpões SP Consultoria.`;
+  const urlCanonica = `https://galpoesp.com.br/imovel/${codigo}`;
+  const imagemOg = im.FotoDestaque || '';
+
+  document.querySelector('meta[name="description"]').setAttribute('content', descricaoMeta);
+  document.getElementById('canonical-tag').setAttribute('href', urlCanonica);
+  document.getElementById('og-url').setAttribute('content', urlCanonica);
+  document.getElementById('og-title').setAttribute('content', `${titulo} | Galpões SP Consultoria`);
+  document.getElementById('og-description').setAttribute('content', descricaoMeta);
+  document.getElementById('og-image').setAttribute('content', imagemOg);
+  document.getElementById('twitter-title').setAttribute('content', `${titulo} | Galpões SP Consultoria`);
+  document.getElementById('twitter-description').setAttribute('content', descricaoMeta);
+  document.getElementById('twitter-image').setAttribute('content', imagemOg);
 
   // Monta fotos
   fotosDisponiveis = [];
